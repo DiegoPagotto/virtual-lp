@@ -46,6 +46,8 @@ const VinylDisk = () => {
 
             const textRotation = angle;
 
+            const isCurrentSong = song.uri === track?.uri;
+
             return (
                 <TouchableOpacity
                     key={song.id}
@@ -66,9 +68,14 @@ const VinylDisk = () => {
                             styles.songTitle,
                             {
                                 transform: [{ rotate: `${-textRotation}deg` }],
-                                color:
-                                    currentSide === 'A' ? '#FFA500' : '#1DB954',
-                                maxWidth: '100%',
+                                color: isCurrentSong ? '#FFD700' : '#fff',
+                                borderWidth: isCurrentSong ? 2 : 0,
+                                borderColor: isCurrentSong
+                                    ? '#FFD700'
+                                    : 'transparent',
+                                backgroundColor: isCurrentSong
+                                    ? 'rgba(255, 215, 0, 0.3)'
+                                    : 'rgba(0,0,0,0.7)',
                             },
                         ]}
                         adjustsFontSizeToFit={true}
@@ -106,12 +113,7 @@ const VinylDisk = () => {
                     />
                 )}
 
-                <Text
-                    style={[
-                        styles.sideIndicator,
-                        { color: currentSide === 'A' ? '#FFA500' : '#1DB954' },
-                    ]}
-                >
+                <Text style={[styles.sideIndicator, { color: '#3893e8' }]}>
                     SIDE {currentSide}
                 </Text>
 
