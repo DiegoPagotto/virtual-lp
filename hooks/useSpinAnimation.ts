@@ -15,7 +15,7 @@ export const useSpinAnimation = (isPlaying: boolean) => {
             animationRef.current = Animated.loop(
                 Animated.timing(rotateAnim, {
                     toValue: lastValue.current + 1,
-                    duration: 8000,
+                    duration: 12000,
                     easing: Easing.linear,
                     useNativeDriver: true,
                 })

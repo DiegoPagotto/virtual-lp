@@ -51,6 +51,7 @@ const VinylDisk = () => {
             return (
                 <TouchableOpacity
                     key={song.id}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={[
                         styles.partition,
                         {
@@ -170,8 +171,8 @@ const styles = StyleSheet.create({
     },
     partition: {
         position: 'absolute',
-        width: 80,
-        height: 30,
+        width: 100,
+        height: 50,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -180,9 +181,11 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontWeight: 'bold',
         backgroundColor: 'rgba(0,0,0,0.7)',
-        paddingHorizontal: 4,
-        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
+
     sideIndicator: {
         position: 'absolute',
         top: 10,
