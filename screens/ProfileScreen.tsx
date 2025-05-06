@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import VinylDisk from '../components/VinylDisk';
+import { SpotifyPlayer } from '../components/SpotifyPlayer';
 
 export default function ProfileScreen({ route }) {
     interface UserProfile {
@@ -45,19 +46,12 @@ export default function ProfileScreen({ route }) {
 
     return (
         <View style={styles.container}>
-            {user && (
-                <View>
-                    <Text style={styles.title}>
-                        Hello, {user.display_name || 'Spotify User'}!
-                    </Text>
-                    <Text style={styles.text}>Email: {user.email}</Text>
-                    <Text style={styles.text}>Country: {user.country}</Text>
-                    <Text style={styles.text}>
-                        Account type: {user.product}
-                    </Text>
-                </View>
-            )}
-            <VinylDisk />
+            <View>
+                <SpotifyPlayer token={accessToken} />
+            </View>
+            <View>
+                <VinylDisk />
+            </View>
         </View>
     );
 }
