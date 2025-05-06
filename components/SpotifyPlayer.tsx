@@ -1,97 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
-import axios from 'axios';
+import { useSpotifyPlayer } from '../contexts/SpotifyPlayerContext';
 
-type Props = {
-    token: string;
-};
-
-export const SpotifyPlayer: React.FC<Props> = ({ token }) => {
-    const [track, setTrack] = useState<any>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [volume, setVolume] = useState(50);
-
-    const headers = {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-    };
-
-    const fetchPlayerState = async () => {
-        try {
-            const res = await axios.get(
-                'https://api.spotify.com/v1/me/player',
-                {
-                    headers,
-                }
-            );
-            if (res.data) {
-                const { is_playing, item, device } = res.data;
-                setTrack(item);
-                setIsPlaying(is_playing);
-                if (device?.volume_percent !== undefined) {
-                    setVolume(device.volume_percent);
-                }
-            }
-        } catch (err) {
-            console.error('Error fetching player state:', err);
-        }
-    };
-
-    const togglePlayback = async () => {
-        try {
-            const url = isPlaying
-                ? 'https://api.spotify.com/v1/me/player/pause'
-                : 'https://api.spotify.com/v1/me/player/play';
-            await axios.put(url, {}, { headers });
-            setIsPlaying(!isPlaying);
-        } catch (err) {
-            console.error('Error toggling playback:', err);
-        }
-    };
-
-    const skip = async () => {
-        try {
-            await axios.post(
-                'https://api.spotify.com/v1/me/player/next',
-                {},
-                { headers }
-            );
-        } catch (err) {
-            console.error('Error skipping track:', err);
-        }
-    };
-
-    const rewind = async () => {
-        try {
-            await axios.post(
-                'https://api.spotify.com/v1/me/player/previous',
-                {},
-                { headers }
-            );
-        } catch (err) {
-            console.error('Error rewinding track:', err);
-        }
-    };
-
-    const changeVolume = async (value: number) => {
-        try {
-            setVolume(value);
-            await axios.put(
-                `https://api.spotify.com/v1/me/player/volume?volume_percent=${value}`,
-                {},
-                { headers }
-            );
-        } catch (err) {
-            console.error('Error changing volume:', err);
-        }
-    };
-
-    useEffect(() => {
-        fetchPlayerState();
-        const interval = setInterval(fetchPlayerState, 1000);
-        return () => clearInterval(interval);
-    }, []);
+export const SpotifyPlayer: React.FC = () => {
+    const {
+        track,
+        isPlaying,
+        volume,
+        togglePlayback,
+        skip,
+        rewind,
+        changeVolume,
+    } = useSpotifyPlayer();
 
     if (!track) return <Text>Loading...</Text>;
 
@@ -106,7 +27,7 @@ export const SpotifyPlayer: React.FC<Props> = ({ token }) => {
             <View style={styles.controls}>
                 <Button title="⏮️" onPress={rewind} />
                 <Button
-                    title={isPlaying ? '⏸️' : '▶️'}
+                    title={isPlaying ? '⏸️ Pause' : '▶️ Play'}
                     onPress={togglePlayback}
                 />
                 <Button title="⏭️" onPress={skip} />
@@ -118,8 +39,7 @@ export const SpotifyPlayer: React.FC<Props> = ({ token }) => {
                 minimumValue={0}
                 maximumValue={100}
                 value={volume}
-                onValueChange={setVolume}
-                onSlidingComplete={changeVolume}
+                onValueChange={changeVolume}
                 step={1}
             />
         </View>
@@ -129,6 +49,6 @@ export const SpotifyPlayer: React.FC<Props> = ({ token }) => {
 const styles = StyleSheet.create({
     container: { alignItems: 'center', padding: 20 },
     title: { fontSize: 18, fontWeight: 'bold', color: 'white' },
-    subtitle: { fontSize: 14, marginTop: 4, color: 'gray', maxWidth: 200 },
+    subtitle: { fontSize: 14, marginTop: 4, color: 'gray' },
     controls: { flexDirection: 'row', marginTop: 20, gap: 10 },
 });

@@ -4,6 +4,7 @@ import VinylDisk from '../components/VinylDisk';
 import { SpotifyPlayer } from '../components/SpotifyPlayer';
 
 import { RouteProp } from '@react-navigation/native';
+import { SpotifyPlayerProvider } from '../contexts/SpotifyPlayerContext';
 
 type ProfileScreenRouteProp = RouteProp<
     { params: { accessToken: string } },
@@ -56,14 +57,16 @@ export default function ProfileScreen({
     }
 
     return (
-        <View style={styles.container}>
-            <View>
-                <SpotifyPlayer token={accessToken} />
+        <SpotifyPlayerProvider token={accessToken}>
+            <View style={styles.container}>
+                <View>
+                    <SpotifyPlayer />
+                </View>
+                <View>
+                    <VinylDisk />
+                </View>
             </View>
-            <View>
-                <VinylDisk />
-            </View>
-        </View>
+        </SpotifyPlayerProvider>
     );
 }
 
