@@ -48,22 +48,19 @@ export default function ProfileScreen({
         fetchUserProfile();
     }, [accessToken]);
 
-    if (loading) {
-        return (
-            <View style={styles.container}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
-    }
-
     return (
         <SpotifyPlayerProvider token={accessToken}>
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" />
+                </View>
+            )}
             <View style={styles.container}>
                 <View>
                     <SpotifyPlayer />
                 </View>
                 <View>
-                    <VinylDisk />
+                    <VinylDisk setLoading={setLoading} />
                 </View>
             </View>
         </SpotifyPlayerProvider>
@@ -71,6 +68,17 @@ export default function ProfileScreen({
 }
 
 const styles = StyleSheet.create({
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        zIndex: 5,
+    },
     container: {
         flex: 1,
         flexDirection: 'row',
@@ -78,6 +86,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         color: 'white',
+        backgroundColor: '#121212',
     },
     title: {
         fontSize: 24,
