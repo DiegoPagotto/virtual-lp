@@ -5,7 +5,7 @@ type Track = any;
 
 type SpotifyPlayerContextType = {
     track: Track | null;
-    albumTracks: any[]; // Tracks for the current album
+    albumTracks: any[];
     isPlaying: boolean;
     volume: number;
     fetchPlayerState: () => void;
@@ -14,7 +14,7 @@ type SpotifyPlayerContextType = {
     rewind: () => void;
     changeVolume: (value: number) => void;
     playSong: (uri: string) => void;
-    getTracksForAlbum: (albumId: string) => void; // Added to the context
+    getTracksForAlbum: (albumId: string) => void;
 };
 
 export const SpotifyPlayerContext =
@@ -34,7 +34,7 @@ export const SpotifyPlayerProvider: React.FC<{
     children: React.ReactNode;
 }> = ({ token, children }) => {
     const [track, setTrack] = useState<Track | null>(null);
-    const [albumTracks, setAlbumTracks] = useState<any[]>([]); // To store album tracks
+    const [albumTracks, setAlbumTracks] = useState<any[]>([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
 
@@ -56,7 +56,6 @@ export const SpotifyPlayerProvider: React.FC<{
                 if (device?.volume_percent !== undefined)
                     setVolume(device.volume_percent);
 
-                // Fetch the tracks for the album once the track is set
                 if (item?.album?.id) {
                     getTracksForAlbum(item.album.id);
                 }
@@ -149,7 +148,7 @@ export const SpotifyPlayerProvider: React.FC<{
         <SpotifyPlayerContext.Provider
             value={{
                 track,
-                albumTracks, // Provide album tracks
+                albumTracks,
                 isPlaying,
                 volume,
                 fetchPlayerState,
@@ -158,7 +157,7 @@ export const SpotifyPlayerProvider: React.FC<{
                 rewind,
                 changeVolume,
                 playSong,
-                getTracksForAlbum, // Provide the method to fetch tracks
+                getTracksForAlbum,
             }}
         >
             {children}
