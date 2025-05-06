@@ -68,8 +68,11 @@ const VinylDisk = () => {
                                 transform: [{ rotate: `${-textRotation}deg` }],
                                 color:
                                     currentSide === 'A' ? '#FFA500' : '#1DB954',
+                                maxWidth: '100%',
                             },
                         ]}
+                        adjustsFontSizeToFit={true}
+                        numberOfLines={2}
                     >
                         {song.name}
                     </Text>
