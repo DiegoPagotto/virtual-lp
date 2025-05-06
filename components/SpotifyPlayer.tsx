@@ -1,4 +1,3 @@
-// SpotifyPlayer.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
