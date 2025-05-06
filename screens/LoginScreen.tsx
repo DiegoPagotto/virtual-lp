@@ -3,9 +3,10 @@ import { View, Button, StyleSheet, Alert } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import React from 'react';
+import Constants from 'expo-constants';
 
-const SPOTIFY_CLIENT_ID = 'CLIENT_ID_HERE'; // Replace with your Spotify client ID
-const SPOTIFY_CLIENT_SECRET = 'CLIENT_SECRET_HERE'; // Replace with your Spotify client secret
+const SPOTIFY_CLIENT_ID = Constants.expoConfig.extra.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = Constants.expoConfig.extra.SPOTIFY_CLIENT_ID;
 
 const styles = StyleSheet.create({
     container: {
@@ -24,6 +25,8 @@ export default function LoginScreen({ navigation }) {
     });
 
     console.log('Using redirect URI:', SPOTIFY_REDIRECT_URI);
+    console.log('Using client ID:', SPOTIFY_CLIENT_ID);
+    console.log('Using client secret:', SPOTIFY_CLIENT_SECRET);
 
     const handleLogin = async () => {
         try {
