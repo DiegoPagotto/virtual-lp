@@ -37,7 +37,7 @@ export default function LoginScreen({ navigation }) {
                 response_type: 'code',
                 client_id: SPOTIFY_CLIENT_ID,
                 redirect_uri: SPOTIFY_REDIRECT_URI,
-                scope: 'user-read-private user-read-email',
+                scope: 'user-read-private user-read-email user-read-playback-state user-modify-playback-state user-read-currently-playing',
                 show_dialog: 'true',
             }).toString();
 
