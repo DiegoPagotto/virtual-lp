@@ -14,9 +14,8 @@ type SpotifyPlayerContextType = {
     changeVolume: (value: number) => void;
 };
 
-const SpotifyPlayerContext = createContext<SpotifyPlayerContextType | null>(
-    null
-);
+export const SpotifyPlayerContext =
+    createContext<SpotifyPlayerContextType | null>(null);
 
 export const useSpotifyPlayer = () => {
     const context = useContext(SpotifyPlayerContext);
