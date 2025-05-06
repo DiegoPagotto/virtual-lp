@@ -103,6 +103,7 @@ export const SpotifyPlayerProvider: React.FC<{
 
     const changeVolume = async (value: number) => {
         try {
+            if (volume === value || value === 0) return;
             setVolume(value);
             await axios.put(
                 `https://api.spotify.com/v1/me/player/volume?volume_percent=${value}`,
