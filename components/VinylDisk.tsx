@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import {
     View,
     StyleSheet,
@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 import { SpotifyPlayerContext } from '../contexts/SpotifyPlayerContext';
 import { useSpinAnimation } from '../hooks/useSpinAnimation';
+import useFlipAnimation from '../hooks/useFlipAnimation';
 
 const { width, height } = Dimensions.get('window');
 const DISK_SIZE = Math.min(width, height * 0.95);
 
 const VinylDisk = () => {
     const context = useContext(SpotifyPlayerContext);
-    const [currentSide, setCurrentSide] = useState<'A' | 'B'>('A');
+    const { currentSide, flip, flipStyle } = useFlipAnimation();
 
     if (!context) {
         throw new Error('SpotifyPlayerContext is null.');
@@ -32,10 +33,6 @@ const VinylDisk = () => {
 
     const handleSongClick = (songUri: string) => {
         playSong(songUri);
-    };
-
-    const flipVinyl = () => {
-        setCurrentSide(currentSide === 'A' ? 'B' : 'A');
     };
 
     const renderSongs = (tracks: any[]) => {
@@ -92,6 +89,7 @@ const VinylDisk = () => {
                         borderRadius: DISK_SIZE / 2,
                     },
                     spinStyle,
+                    flipStyle,
                 ]}
             >
                 {albumImage && (
@@ -119,7 +117,7 @@ const VinylDisk = () => {
                 )}
             </Animated.View>
 
-            <TouchableOpacity style={styles.flipButton} onPress={flipVinyl}>
+            <TouchableOpacity style={styles.flipButton} onPress={flip}>
                 <Text style={styles.flipButtonText}>
                     SIDE {currentSide === 'A' ? 'B' : 'A'}
                 </Text>
