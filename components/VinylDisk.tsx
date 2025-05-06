@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
     View,
     StyleSheet,
@@ -7,6 +7,7 @@ import {
     Animated,
     TouchableOpacity,
     Text,
+    ActivityIndicator,
 } from 'react-native';
 import { SpotifyPlayerContext } from '../contexts/SpotifyPlayerContext';
 import { useSpinAnimation } from '../hooks/useSpinAnimation';
@@ -15,7 +16,11 @@ import useFlipAnimation from '../hooks/useFlipAnimation';
 const { width, height } = Dimensions.get('window');
 const DISK_SIZE = Math.min(width, height * 0.95);
 
-const VinylDisk = () => {
+interface VinylDiskProps {
+    setLoading: (loading: boolean) => void;
+}
+
+const VinylDisk: React.FC<VinylDiskProps> = ({ setLoading }) => {
     const context = useContext(SpotifyPlayerContext);
     const { currentSide, flip, flipStyle } = useFlipAnimation();
 
@@ -32,7 +37,14 @@ const VinylDisk = () => {
     const sideB = albumTracks.slice(Math.ceil(albumTracks.length / 2));
 
     const handleSongClick = (songUri: string) => {
-        playSong(songUri);
+        setLoading(true);
+        playSong(songUri)
+            .catch((error) => {
+                console.error('Error playing song:', error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     const renderSongs = (tracks: any[]) => {
@@ -90,49 +102,51 @@ const VinylDisk = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <Animated.View
-                style={[
-                    styles.disk,
-                    {
-                        width: DISK_SIZE,
-                        height: DISK_SIZE,
-                        borderRadius: DISK_SIZE / 2,
-                    },
-                    {
-                        transform: [
-                            ...spinStyle.transform,
-                            ...flipStyle.transform,
-                        ],
-                    },
-                ]}
-            >
-                {albumImage && (
-                    <Image
-                        source={{ uri: albumImage }}
-                        style={styles.albumArt}
-                    />
-                )}
+        <>
+            <View style={styles.container}>
+                <Animated.View
+                    style={[
+                        styles.disk,
+                        {
+                            width: DISK_SIZE,
+                            height: DISK_SIZE,
+                            borderRadius: DISK_SIZE / 2,
+                        },
+                        {
+                            transform: [
+                                ...spinStyle.transform,
+                                ...flipStyle.transform,
+                            ],
+                        },
+                    ]}
+                >
+                    {albumImage && (
+                        <Image
+                            source={{ uri: albumImage }}
+                            style={styles.albumArt}
+                        />
+                    )}
 
-                <Text style={[styles.sideIndicator, { color: '#3893e8' }]}>
-                    SIDE {currentSide}
-                </Text>
+                    <Text style={[styles.sideIndicator, { color: '#3893e8' }]}>
+                        SIDE {currentSide}
+                    </Text>
 
-                {albumTracks.length > 0 && (
-                    <View style={styles.partitionsContainer}>
-                        {currentSide === 'A'
-                            ? renderSongs(sideA)
-                            : renderSongs(sideB)}
-                    </View>
-                )}
-            </Animated.View>
+                    {albumTracks.length > 0 && (
+                        <View style={styles.partitionsContainer}>
+                            {currentSide === 'A'
+                                ? renderSongs(sideA)
+                                : renderSongs(sideB)}
+                        </View>
+                    )}
+                </Animated.View>
 
-            <TouchableOpacity style={styles.flipButton} onPress={flip}>
-                <Text style={styles.flipButtonText}>
-                    SIDE {currentSide === 'A' ? 'B' : 'A'}
-                </Text>
-            </TouchableOpacity>
-        </View>
+                <TouchableOpacity style={styles.flipButton} onPress={flip}>
+                    <Text style={styles.flipButtonText}>
+                        SIDE {currentSide === 'A' ? 'B' : 'A'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </>
     );
 };
 
