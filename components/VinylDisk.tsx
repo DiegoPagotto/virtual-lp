@@ -91,8 +91,12 @@ const VinylDisk = () => {
                         height: DISK_SIZE,
                         borderRadius: DISK_SIZE / 2,
                     },
-                    spinStyle,
-                    flipStyle,
+                    {
+                        transform: [
+                            ...spinStyle.transform,
+                            ...flipStyle.transform,
+                        ],
+                    },
                 ]}
             >
                 {albumImage && (
@@ -149,9 +153,9 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     albumArt: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         borderWidth: 2,
         borderColor: '#000',
     },
