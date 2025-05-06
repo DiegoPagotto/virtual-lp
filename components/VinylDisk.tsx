@@ -42,7 +42,7 @@ const VinylDisk = () => {
         return tracks.map((song: any, index: number) => {
             const angle = (360 / tracks.length) * index;
             const angleRad = (angle * Math.PI) / 180;
-            const radius = DISK_SIZE * 0.4;
+            const radius = DISK_SIZE * 0.35;
 
             const x = radius * Math.sin(angleRad);
             const y = -radius * Math.cos(angleRad);
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     },
     partition: {
         position: 'absolute',
-        width: 100,
+        width: 80,
         height: 30,
         justifyContent: 'center',
         alignItems: 'center',
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     },
     sideIndicator: {
         position: 'absolute',
-        top: 60,
+        top: 10,
         fontWeight: 'bold',
         fontSize: 16,
         backgroundColor: 'rgba(0,0,0,0.7)',
