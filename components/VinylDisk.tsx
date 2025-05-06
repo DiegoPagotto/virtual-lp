@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Dimensions, Animated } from 'react-native';
 import { SpotifyPlayerContext } from '../contexts/SpotifyPlayerContext';
+import { useSpinAnimation } from '../hooks/useSpinAnimation';
 
 const { width, height } = Dimensions.get('window');
 const DISK_SIZE = Math.min(width, height * 0.95);
@@ -12,13 +13,14 @@ const VinylDisk = () => {
         throw new Error('SpotifyPlayerContext is null.');
     }
 
-    const { track } = context;
-
+    const { track, isPlaying } = context;
     const albumImage = track?.album?.images?.[0]?.url;
+
+    const { spinStyle } = useSpinAnimation(isPlaying);
 
     return (
         <View style={styles.container}>
-            <View
+            <Animated.View
                 style={[
                     styles.disk,
                     {
@@ -26,6 +28,7 @@ const VinylDisk = () => {
                         height: DISK_SIZE,
                         borderRadius: DISK_SIZE / 2,
                     },
+                    spinStyle,
                 ]}
             >
                 {albumImage && (
@@ -34,7 +37,7 @@ const VinylDisk = () => {
                         style={styles.albumArt}
                     />
                 )}
-            </View>
+            </Animated.View>
         </View>
     );
 };
