@@ -16,6 +16,7 @@ export default function App() {
                         cardStyle: { backgroundColor: 'transparent' },
                         headerStyle: { backgroundColor: '#000000' },
                         headerTintColor: '#ffffff',
+                        headerShown: false,
                     }}
                 >
                     <Stack.Screen name="Login" component={LoginScreen} />

@@ -49,9 +49,11 @@ export default function ProfileScreen({ route }) {
                     <Text style={styles.title}>
                         Hello, {user.display_name || 'Spotify User'}!
                     </Text>
-                    <Text>Email: {user.email}</Text>
-                    <Text>Country: {user.country}</Text>
-                    <Text>Account type: {user.product}</Text>
+                    <Text style={styles.text}>Email: {user.email}</Text>
+                    <Text style={styles.text}>Country: {user.country}</Text>
+                    <Text style={styles.text}>
+                        Account type: {user.product}
+                    </Text>
                 </>
             )}
         </View>
@@ -64,10 +66,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        color: 'white',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+        color: 'white',
+    },
+    text: {
+        color: 'white',
     },
 });

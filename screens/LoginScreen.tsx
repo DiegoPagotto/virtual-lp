@@ -5,8 +5,9 @@ import * as AuthSession from 'expo-auth-session';
 import React from 'react';
 import Constants from 'expo-constants';
 
-const SPOTIFY_CLIENT_ID = Constants.expoConfig.extra.SPOTIFY_CLIENT_ID;
-const SPOTIFY_CLIENT_SECRET = Constants.expoConfig.extra.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_ID = Constants.expoConfig!.extra!.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET =
+    Constants.expoConfig!.extra!.SPOTIFY_CLIENT_SECRET;
 
 const styles = StyleSheet.create({
     container: {
