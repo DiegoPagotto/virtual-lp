@@ -3,7 +3,18 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import VinylDisk from '../components/VinylDisk';
 import { SpotifyPlayer } from '../components/SpotifyPlayer';
 
-export default function ProfileScreen({ route }) {
+import { RouteProp } from '@react-navigation/native';
+
+type ProfileScreenRouteProp = RouteProp<
+    { params: { accessToken: string } },
+    'params'
+>;
+
+export default function ProfileScreen({
+    route,
+}: {
+    route: ProfileScreenRouteProp;
+}) {
     interface UserProfile {
         display_name?: string;
         email?: string;
