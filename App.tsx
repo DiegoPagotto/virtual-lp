@@ -3,10 +3,18 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+    useEffect(() => {
+        ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+    }, []);
+
     return (
         <View style={styles.container}>
             <NavigationContainer theme={darkTheme}>
