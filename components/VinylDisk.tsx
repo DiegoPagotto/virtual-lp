@@ -1,5 +1,13 @@
-import React, { useContext } from 'react';
-import { View, StyleSheet, Image, Dimensions, Animated } from 'react-native';
+import React, { useContext, useState } from 'react';
+import {
+    View,
+    StyleSheet,
+    Image,
+    Dimensions,
+    Animated,
+    TouchableOpacity,
+    Text,
+} from 'react-native';
 import { SpotifyPlayerContext } from '../contexts/SpotifyPlayerContext';
 import { useSpinAnimation } from '../hooks/useSpinAnimation';
 
@@ -8,15 +16,70 @@ const DISK_SIZE = Math.min(width, height * 0.95);
 
 const VinylDisk = () => {
     const context = useContext(SpotifyPlayerContext);
+    const [currentSide, setCurrentSide] = useState<'A' | 'B'>('A');
 
     if (!context) {
         throw new Error('SpotifyPlayerContext is null.');
     }
 
-    const { track, isPlaying } = context;
+    const { track, isPlaying, albumTracks, playSong } = context;
     const albumImage = track?.album?.images?.[0]?.url;
 
     const { spinStyle } = useSpinAnimation(isPlaying);
+
+    const sideA = albumTracks.slice(0, Math.ceil(albumTracks.length / 2));
+    const sideB = albumTracks.slice(Math.ceil(albumTracks.length / 2));
+
+    const handleSongClick = (songUri: string) => {
+        playSong(songUri);
+    };
+
+    const flipVinyl = () => {
+        setCurrentSide(currentSide === 'A' ? 'B' : 'A');
+    };
+
+    const renderSongs = (tracks: any[]) => {
+        return tracks.map((song: any, index: number) => {
+            const angle = (360 / tracks.length) * index;
+            const angleRad = (angle * Math.PI) / 180;
+            const radius = DISK_SIZE * 0.4;
+
+            const x = radius * Math.sin(angleRad);
+            const y = -radius * Math.cos(angleRad);
+
+            const textRotation = angle;
+
+            return (
+                <TouchableOpacity
+                    key={song.id}
+                    style={[
+                        styles.partition,
+                        {
+                            transform: [
+                                { translateX: x },
+                                { translateY: y },
+                                { rotate: `${textRotation}deg` },
+                            ],
+                        },
+                    ]}
+                    onPress={() => handleSongClick(song.uri)}
+                >
+                    <Text
+                        style={[
+                            styles.songTitle,
+                            {
+                                transform: [{ rotate: `${-textRotation}deg` }],
+                                color:
+                                    currentSide === 'A' ? '#FFA500' : '#1DB954',
+                            },
+                        ]}
+                    >
+                        {song.name}
+                    </Text>
+                </TouchableOpacity>
+            );
+        });
+    };
 
     return (
         <View style={styles.container}>
@@ -37,13 +100,38 @@ const VinylDisk = () => {
                         style={styles.albumArt}
                     />
                 )}
+
+                <Text
+                    style={[
+                        styles.sideIndicator,
+                        { color: currentSide === 'A' ? '#FFA500' : '#1DB954' },
+                    ]}
+                >
+                    SIDE {currentSide}
+                </Text>
+
+                {albumTracks.length > 0 && (
+                    <View style={styles.partitionsContainer}>
+                        {currentSide === 'A'
+                            ? renderSongs(sideA)
+                            : renderSongs(sideB)}
+                    </View>
+                )}
             </Animated.View>
+
+            <TouchableOpacity style={styles.flipButton} onPress={flipVinyl}>
+                <Text style={styles.flipButtonText}>
+                    SIDE {currentSide === 'A' ? 'B' : 'A'}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        flexDirection: 'row',
+        gap: 20,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -65,6 +153,48 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         borderWidth: 2,
         borderColor: '#000',
+    },
+    partitionsContainer: {
+        position: 'absolute',
+        width: DISK_SIZE,
+        height: DISK_SIZE,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    partition: {
+        position: 'absolute',
+        width: 100,
+        height: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    songTitle: {
+        fontSize: 10,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingHorizontal: 4,
+        borderRadius: 4,
+    },
+    sideIndicator: {
+        position: 'absolute',
+        top: 60,
+        fontWeight: 'bold',
+        fontSize: 16,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingHorizontal: 10,
+        borderRadius: 10,
+    },
+    flipButton: {
+        marginTop: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        backgroundColor: '#333',
+        borderRadius: 20,
+    },
+    flipButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
 });
 

@@ -5,6 +5,7 @@ type Track = any;
 
 type SpotifyPlayerContextType = {
     track: Track | null;
+    albumTracks: any[]; // Tracks for the current album
     isPlaying: boolean;
     volume: number;
     fetchPlayerState: () => void;
@@ -12,6 +13,8 @@ type SpotifyPlayerContextType = {
     skip: () => void;
     rewind: () => void;
     changeVolume: (value: number) => void;
+    playSong: (uri: string) => void;
+    getTracksForAlbum: (albumId: string) => void; // Added to the context
 };
 
 export const SpotifyPlayerContext =
@@ -31,6 +34,7 @@ export const SpotifyPlayerProvider: React.FC<{
     children: React.ReactNode;
 }> = ({ token, children }) => {
     const [track, setTrack] = useState<Track | null>(null);
+    const [albumTracks, setAlbumTracks] = useState<any[]>([]); // To store album tracks
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
 
@@ -51,6 +55,11 @@ export const SpotifyPlayerProvider: React.FC<{
                 setIsPlaying(is_playing);
                 if (device?.volume_percent !== undefined)
                     setVolume(device.volume_percent);
+
+                // Fetch the tracks for the album once the track is set
+                if (item?.album?.id) {
+                    getTracksForAlbum(item.album.id);
+                }
             }
         } catch (err) {
             console.error('Error fetching player state:', err);
@@ -106,6 +115,30 @@ export const SpotifyPlayerProvider: React.FC<{
         }
     };
 
+    const playSong = async (uri: string) => {
+        try {
+            await axios.put(
+                'https://api.spotify.com/v1/me/player/play',
+                { uris: [uri] },
+                { headers }
+            );
+        } catch (err) {
+            console.error('Error playing song:', err);
+        }
+    };
+
+    const getTracksForAlbum = async (albumId: string) => {
+        try {
+            const res = await axios.get(
+                `https://api.spotify.com/v1/albums/${albumId}/tracks`,
+                { headers }
+            );
+            setAlbumTracks(res.data.items); // Store album tracks
+        } catch (err) {
+            console.error('Error fetching album tracks:', err);
+        }
+    };
+
     useEffect(() => {
         fetchPlayerState();
         const interval = setInterval(fetchPlayerState, 5000);
@@ -116,6 +149,7 @@ export const SpotifyPlayerProvider: React.FC<{
         <SpotifyPlayerContext.Provider
             value={{
                 track,
+                albumTracks, // Provide album tracks
                 isPlaying,
                 volume,
                 fetchPlayerState,
@@ -123,6 +157,8 @@ export const SpotifyPlayerProvider: React.FC<{
                 skip,
                 rewind,
                 changeVolume,
+                playSong,
+                getTracksForAlbum, // Provide the method to fetch tracks
             }}
         >
             {children}
