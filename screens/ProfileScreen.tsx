@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import VinylDisk from '../components/VinylDisk';
 
 export default function ProfileScreen({ route }) {
     interface UserProfile {
@@ -45,7 +46,7 @@ export default function ProfileScreen({ route }) {
     return (
         <View style={styles.container}>
             {user && (
-                <>
+                <View>
                     <Text style={styles.title}>
                         Hello, {user.display_name || 'Spotify User'}!
                     </Text>
@@ -54,8 +55,9 @@ export default function ProfileScreen({ route }) {
                     <Text style={styles.text}>
                         Account type: {user.product}
                     </Text>
-                </>
+                </View>
             )}
+            <VinylDisk />
         </View>
     );
 }
@@ -63,7 +65,8 @@ export default function ProfileScreen({ route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
         alignItems: 'center',
         padding: 20,
         color: 'white',
