@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { SpotifyPlayerContext } from '../contexts/SpotifyPlayerContext';
 
 const { width, height } = Dimensions.get('window');
 const DISK_SIZE = Math.min(width, height * 0.95);
 
 const VinylDisk = () => {
+    const context = useContext(SpotifyPlayerContext);
+
+    if (!context) {
+        throw new Error('SpotifyPlayerContext is null.');
+    }
+
+    const { track } = context;
+
+    const albumImage = track?.album?.images?.[0]?.url;
+
     return (
         <View style={styles.container}>
             <View
@@ -17,12 +28,12 @@ const VinylDisk = () => {
                     },
                 ]}
             >
-                <Image
-                    source={{
-                        uri: 'https://universalmusic.vtexassets.com/arquivos/ids/185314/cd%20metallica-ride-the-lightning-importado-cd%20metallica-ride-the-lightning-impo-00042283814028-00004228381402.jpg?v=638482831030130000',
-                    }}
-                    style={styles.albumArt}
-                />
+                {albumImage && (
+                    <Image
+                        source={{ uri: albumImage }}
+                        style={styles.albumArt}
+                    />
+                )}
             </View>
         </View>
     );
