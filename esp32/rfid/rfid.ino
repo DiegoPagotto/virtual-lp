@@ -1,110 +1,159 @@
 #include <SPI.h>
 #include <MFRC522.h>
+#include <WiFi.h>
+#include <WebServer.h>
 
 #define SS_PIN 5
 #define RST_PIN 22
 
+const char* ssid = "";
+const char* password = "";
+
+WebServer server(80);
 MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+enum Mode { READ_MODE, WRITE_MODE };
+Mode currentMode = READ_MODE;
+String writeData = "";
+String lastCardData = "";
+bool cardPresent = false;
 
 void setup() {
   Serial.begin(115200);
   SPI.begin();
   mfrc522.PCD_Init();
-  Serial.println("Ready to scan MIFARE Ultralight...");
-  Serial.println("Enter a string (max 22 chars) and press ENTER:");
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConnected to WiFi");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  server.on("/setMode", HTTP_POST, handleSetMode);
+  server.on("/getCard", HTTP_GET, handleGetCard);
+  
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    String userInput = Serial.readStringUntil('\n');
-    userInput.trim();
+  server.handleClient();
+  checkCardPresence();
+  delay(100);
+}
 
-    if (userInput.length() > 22) {
-      Serial.println("Input too long! Trimming to 22 chars.");
-      userInput = userInput.substring(0, 22);
-    }
+void checkCardPresence() {
+  static unsigned long lastCardTime = 0;
+  static bool lastCardState = false;
 
-    Serial.print("You entered: ");
-    Serial.println(userInput);
+  bool currentCardState = false;
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    currentCardState = true;
+    lastCardTime = millis();
+  } else if (millis() - lastCardTime < 1000) {
+    currentCardState = true;
+  }
 
-    Serial.println("Place the card near the reader...");
-    while (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
-      delay(100);
-    }
+  if (currentCardState && !lastCardState) {
+    handleCardDetected();
+    cardPresent = true;
+    Serial.println("Card detected.");
+  } else if (!currentCardState && lastCardState) {
+    cardPresent = false;
+    Serial.println("Card removed.");
+    mfrc522.PICC_HaltA();
 
-    Serial.print("UID: ");
-    for (byte i = 0; i < mfrc522.uid.size; i++) {
-      Serial.printf("%02X ", mfrc522.uid.uidByte[i]);
-    }
-    Serial.println();
+  }
 
-    byte dataToWrite[24] = {0};
-    userInput.getBytes(dataToWrite, 23);
+  lastCardState = currentCardState;
+}
 
-    bool writeSuccess = true;
+void handleCardDetected() {
+
+  String uid = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    uid += String(mfrc522.uid.uidByte[i], HEX);
+    if (i < mfrc522.uid.size - 1) uid += ":";
+  }
+  Serial.println("Card detected: " + uid);
+
+  if (currentMode == WRITE_MODE && writeData.length() > 0) {
+    String dataToWrite = writeData.substring(0, 22);
+    byte buffer[24] = {0};
+    dataToWrite.getBytes(buffer, 23);
+
+    bool success = true;
     for (byte page = 4; page <= 9; page++) {
       byte pageData[4] = {
-        dataToWrite[(page-4)*4 + 0],
-        dataToWrite[(page-4)*4 + 1],
-        dataToWrite[(page-4)*4 + 2],
-        dataToWrite[(page-4)*4 + 3]
+        buffer[(page-4)*4], buffer[(page-4)*4+1], 
+        buffer[(page-4)*4+2], buffer[(page-4)*4+3]
       };
-
-      Serial.printf("Writing Page %d: %02X %02X %02X %02X\n", 
-                   page, pageData[0], pageData[1], pageData[2], pageData[3]);
-
-      MFRC522::StatusCode status = mfrc522.MIFARE_Ultralight_Write(page, pageData, 4);
-      if (status != MFRC522::STATUS_OK) {
-        Serial.printf("Write failed on Page %d (Error %d)\n", page, status);
-        writeSuccess = false;
+      
+      if (mfrc522.MIFARE_Ultralight_Write(page, pageData, 4) != MFRC522::STATUS_OK) {
+        success = false;
         break;
       }
       delay(50);
     }
 
-    if (writeSuccess) {
-      Serial.println("Verifying write...");
-      byte verifyBuffer[24];
-      bool verifyOK = true;
-
-      for (byte page = 4; page <= 9; page++) {
-        byte size = 18;
-        byte readBuffer[18];
-        MFRC522::StatusCode status = mfrc522.MIFARE_Read(page, readBuffer, &size);
-        if (status != MFRC522::STATUS_OK) {
-          Serial.printf("Failed to read Page %d for verification\n", page);
-          verifyOK = false;
-          break;
-        }
-
-        for (byte i = 0; i < 4; i++) {
-          verifyBuffer[(page-4)*4 + i] = readBuffer[i];
-        }
+    if (success) {
+      lastCardData = dataToWrite;
+      Serial.println("Write successful: " + dataToWrite);
+    }
+  } else {
+    byte buffer[24] = {0};
+    bool success = true;
+    
+    for (byte page = 4; page <= 9; page++) {
+      byte size = 18;
+      byte pageBuffer[18];
+      if (mfrc522.MIFARE_Read(page, pageBuffer, &size) != MFRC522::STATUS_OK) {
+        success = false;
+        break;
       }
-
-      if (verifyOK) {
-        Serial.print("Read back: ");
-        for (byte i = 0; i < 22; i++) {
-          Serial.printf("%02X ", verifyBuffer[i]);
-        }
-        Serial.println();
-
-        Serial.print("As string: ");
-        for (byte i = 0; i < 22; i++) {
-          if (verifyBuffer[i] >= 32 && verifyBuffer[i] <= 126) {
-            Serial.write(verifyBuffer[i]);
-          } else {
-            Serial.print(".");
-          }
-        }
-        Serial.println();
-      }
+      memcpy(&buffer[(page-4)*4], pageBuffer, 4);
     }
 
-    mfrc522.PICC_HaltA();
-    Serial.println("Done. Enter a new string or scan another card.");
-  } else {
-    Serial.println("Waiting for data input via serial...");
-    delay(5000);
+    if (success) {
+      lastCardData = "";
+      for (byte i = 0; i < 22; i++) {
+        if (buffer[i] >= 32 && buffer[i] <= 126) {
+          lastCardData += (char)buffer[i];
+        } else if (buffer[i] != 0) {
+          lastCardData += ".";
+        }
+      }
+      Serial.println("Card read: " + lastCardData);
+    }
   }
+
+}
+
+void handleSetMode() {
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method Not Allowed");
+    return;
+  }
+
+  String mode = server.arg("mode");
+  if (mode == "READ") {
+    currentMode = READ_MODE;
+    server.send(200, "text/plain", "Mode set to READ");
+  } else if (mode == "WRITE") {
+    currentMode = WRITE_MODE;
+    writeData = server.arg("data");
+    server.send(200, "text/plain", "Mode set to WRITE with data: " + writeData);
+  } else {
+    server.send(400, "text/plain", "Invalid mode");
+  }
+}
+
+void handleGetCard() {
+  String response = "Card: " + lastCardData + "\n";
+  response += "Mode: " + String(currentMode == READ_MODE ? "READ" : "WRITE") + "\n";
+  response += "Card present: " + String(cardPresent ? "Yes" : "No");
+  server.send(200, "text/plain", response);
 }
