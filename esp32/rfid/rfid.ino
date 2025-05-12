@@ -134,26 +134,29 @@ void handleCardDetected() {
 
 void handleSetMode() {
   if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
+    server.send(405, "application/json", "{\"error\":\"Method Not Allowed\"}");
     return;
   }
 
   String mode = server.arg("mode");
   if (mode == "READ") {
     currentMode = READ_MODE;
-    server.send(200, "text/plain", "Mode set to READ");
+    server.send(200, "application/json", "{\"status\":\"ok\", \"mode\":\"READ\"}");
   } else if (mode == "WRITE") {
-    currentMode = WRITE_MODE;
     writeData = server.arg("data");
-    server.send(200, "text/plain", "Mode set to WRITE with data: " + writeData);
+    currentMode = WRITE_MODE;
+    server.send(200, "application/json", "{\"status\":\"ok\", \"mode\":\"WRITE\", \"data\":\"" + writeData + "\"}");
   } else {
-    server.send(400, "text/plain", "Invalid mode");
+    server.send(400, "application/json", "{\"error\":\"Invalid mode\"}");
   }
 }
 
+
 void handleGetCard() {
-  String response = "Card: " + lastCardData + "\n";
-  response += "Mode: " + String(currentMode == READ_MODE ? "READ" : "WRITE") + "\n";
-  response += "Card present: " + String(cardPresent ? "Yes" : "No");
-  server.send(200, "text/plain", response);
+  String json = "{";
+  json += "\"card\":\"" + lastCardData + "\",";
+  json += "\"mode\":\"" + String(currentMode == READ_MODE ? "READ" : "WRITE") + "\",";
+  json += "\"card_present\":" + String(cardPresent ? "true" : "false");
+  json += "}";
+  server.send(200, "application/json", json);
 }
