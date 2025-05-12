@@ -5,6 +5,7 @@
 
 #define SS_PIN 5
 #define RST_PIN 22
+#define LED_PIN 2
 
 const char* ssid = "";
 const char* password = "";
@@ -32,6 +33,9 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW); 
+
   server.on("/setMode", HTTP_POST, handleSetMode);
   server.on("/getCard", HTTP_GET, handleGetCard);
   
@@ -57,16 +61,18 @@ void checkCardPresence() {
     currentCardState = true;
   }
 
-  if (currentCardState && !lastCardState) {
-    handleCardDetected();
-    cardPresent = true;
-    Serial.println("Card detected.");
-  } else if (!currentCardState && lastCardState) {
-    cardPresent = false;
-    Serial.println("Card removed.");
-    mfrc522.PICC_HaltA();
+if (currentCardState && !lastCardState) {
+  handleCardDetected();
+  cardPresent = true;
+  digitalWrite(LED_PIN, HIGH);  
+  Serial.println("Card detected.");
+} else if (!currentCardState && lastCardState) {
+  cardPresent = false;
+  digitalWrite(LED_PIN, LOW); 
+  mfrc522.PICC_HaltA();
+  Serial.println("Card removed.");
+}
 
-  }
 
   lastCardState = currentCardState;
 }
