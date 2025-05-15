@@ -4,5 +4,6 @@ export default {
     extra: {
         SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
         SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
+        ESP32_URL: process.env.ESP32_URL,
     },
 };
