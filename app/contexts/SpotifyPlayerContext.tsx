@@ -58,6 +58,7 @@ export const SpotifyPlayerProvider: React.FC<{
         cardPresent: false,
         mode: '',
     });
+    const previousCardState = useRef<RFIDCardState>(rfidCardState);
 
     useEffect(() => {
         const pollRFIDCard = async () => {
@@ -98,7 +99,7 @@ export const SpotifyPlayerProvider: React.FC<{
                 if (device?.volume_percent !== undefined)
                     setVolume(device.volume_percent);
 
-                if (item?.album?.id) {
+                if (item?.album?.id && !rfidCardState.cardPresent) {
                     getTracksForAlbum(item.album.id);
                 }
             }
@@ -159,13 +160,25 @@ export const SpotifyPlayerProvider: React.FC<{
 
     const playSong = async (uri: string) => {
         try {
-            await axios.put(
-                'https://api.spotify.com/v1/me/player/play',
-                { uris: [uri] },
+            const trackId = uri.split(':').pop();
+            const trackRes = await axios.get(
+                `https://api.spotify.com/v1/tracks/${trackId}`,
                 { headers }
             );
 
-            while (track.current.uri !== uri) {
+            const albumUri = trackRes.data.album.uri;
+
+            await axios.put(
+                'https://api.spotify.com/v1/me/player/play',
+                {
+                    context_uri: albumUri,
+                    offset: { uri },
+                    position_ms: 0,
+                },
+                { headers }
+            );
+
+            while (!track.current || track.current.uri !== uri) {
                 console.log('Waiting for song to play...');
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 await fetchPlayerState();
@@ -183,6 +196,7 @@ export const SpotifyPlayerProvider: React.FC<{
                 { headers }
             );
             setAlbumTracks(res.data.items);
+            return res.data.items;
         } catch (err) {
             console.error('Error fetching album tracks:', err);
         }
@@ -193,6 +207,46 @@ export const SpotifyPlayerProvider: React.FC<{
         const interval = setInterval(fetchPlayerState, 2000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const handleCardState = async () => {
+            const prev = previousCardState.current;
+            if (!token) return;
+
+            if (prev.cardPresent && !rfidCardState.cardPresent) {
+                console.log('Card removed — pausing playback');
+                axios
+                    .put(
+                        'https://api.spotify.com/v1/me/player/pause',
+                        {},
+                        { headers }
+                    )
+                    .then(() => setIsPlaying(false))
+                    .catch((err) =>
+                        console.error('Error pausing playback:', err)
+                    );
+            }
+
+            if (
+                rfidCardState.cardPresent &&
+                rfidCardState.card &&
+                (!prev.cardPresent || prev.card !== rfidCardState.card)
+            ) {
+                console.log(
+                    'New card detected — playing album:',
+                    rfidCardState.card
+                );
+                const tracks = await getTracksForAlbum(rfidCardState.card);
+                if (tracks && tracks.length > 0) {
+                    playSong(tracks[0].uri);
+                }
+            }
+
+            previousCardState.current = rfidCardState;
+        };
+
+        handleCardState();
+    }, [rfidCardState]);
 
     return (
         <SpotifyPlayerContext.Provider
