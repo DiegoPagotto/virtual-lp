@@ -6,6 +6,7 @@ import React, {
     useState,
 } from 'react';
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 type Track = any;
 
@@ -21,7 +22,16 @@ type SpotifyPlayerContextType = {
     changeVolume: (value: number) => void;
     playSong: (uri: string) => Promise<void>;
     getTracksForAlbum: (albumId: string) => void;
+    rfidCardState: RFIDCardState;
 };
+
+export type RFIDCardState = {
+    card: string;
+    cardPresent: boolean;
+    mode: string;
+};
+
+const ESP32_URL = Constants.expoConfig!.extra!.ESP32_URL;
 
 export const SpotifyPlayerContext =
     createContext<SpotifyPlayerContextType | null>(null);
@@ -43,6 +53,32 @@ export const SpotifyPlayerProvider: React.FC<{
     const [albumTracks, setAlbumTracks] = useState<any[]>([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
+    const [rfidCardState, setRfidCardState] = useState<RFIDCardState>({
+        card: '',
+        cardPresent: false,
+        mode: '',
+    });
+
+    useEffect(() => {
+        const pollRFIDCard = async () => {
+            try {
+                const res = await axios.get(`${ESP32_URL}/getCard`);
+                if (res.data) {
+                    setRfidCardState({
+                        card: res.data.card,
+                        cardPresent: res.data.cardPresent,
+                        mode: res.data.mode,
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching RFID card:', err);
+            }
+        };
+
+        pollRFIDCard();
+        const interval = setInterval(pollRFIDCard, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const headers = {
         Authorization: `Bearer ${token}`,
@@ -172,6 +208,7 @@ export const SpotifyPlayerProvider: React.FC<{
                 changeVolume,
                 playSong,
                 getTracksForAlbum,
+                rfidCardState,
             }}
         >
             {children}
